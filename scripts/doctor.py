@@ -6,6 +6,7 @@ This script performs diagnostic checks for:
 - Available disk space
 - Internet connectivity to GitHub
 """
+
 import platform
 import shutil
 import sys
@@ -22,9 +23,9 @@ def print_status(check_name: str, status: bool, message: str = "") -> None:
         status: True if the check passed, False otherwise.
         message: Additional details about the check result.
     """
-    green = '\033[92m'
-    red = '\033[91m'
-    reset = '\033[0m'
+    green = "\033[92m"
+    red = "\033[91m"
+    reset = "\033[0m"
 
     if status:
         print(f"[{green}PASS{reset}] {check_name}")
@@ -68,7 +69,7 @@ def check_internet() -> Tuple[bool, str]:
         Tuple[bool, str]: Status and connection info.
     """
     try:
-        with urllib.request.urlopen('https://github.com', timeout=3):
+        with urllib.request.urlopen("https://github.com", timeout=3):
             return True, "Connected"
     except Exception:  # pylint: disable=broad-except
         return False, "No internet connection"
