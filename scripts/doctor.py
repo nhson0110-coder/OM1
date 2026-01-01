@@ -2,7 +2,6 @@ import sys
 import platform
 import shutil
 import urllib.request
-import os
 
 def print_status(check_name, status, message=""):
     """Prints a colored status message to the console."""
