@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class SystemMonitorPlugin(BasePlugin):
     """
     SystemMonitorPlugin: Monitors hardware health (CPU, RAM, Temperature).
+
     This allows the AI Agent to be aware of its physical constraints.
     """
 
@@ -25,6 +26,7 @@ class SystemMonitorPlugin(BasePlugin):
     def get_data(self):
         """
         Collects current system metrics.
+
         Returns:
             dict: A dictionary containing CPU, Memory, and Temperature data.
         """
@@ -44,6 +46,7 @@ class SystemMonitorPlugin(BasePlugin):
     def _get_temp(self):
         """
         Retrieves CPU temperature.
+
         Note: Temperature sensors might not be available on all platforms.
         """
         if self.mock_mode:
