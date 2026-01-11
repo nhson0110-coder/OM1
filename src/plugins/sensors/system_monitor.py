@@ -24,40 +24,42 @@ class SystemMonitorPlugin(BasePlugin):
         self.mock_mode = config.get("mock_mode", False) if config else False
 
     def get_data(self):
-    """
-    Collects current system metrics.
+        """
+        Collects current system metrics.
 
-    Returns:
-    dict: A dictionary containing CPU, Memory, and Temperature data.
-    """
-    try:
-        data = {
-            "cpu_usage_percent": psutil.cpu_percent(interval=0.5),
-            "memory_usage_percent": psutil.virtual_memory().percent,
-            "temperature_c": self._get_temp(),
-            "status": "healthy",
-            "timestamp": time.time(),
-        }
-        return data
-    except psutil.Error as e:  # Catch psutil-specific errors (e.g., AccessDenied, NoSuchProcess)
-        logger.error(f"Failed to collect system metrics: {e}")
-        return {"status": "error", "message": str(e)}
+        Returns:
+            dict: A dictionary containing CPU, Memory, and Temperature data.
+        """
+        try:
+            data = {
+                "cpu_usage_percent": psutil.cpu_percent(interval=0.5),
+                "memory_usage_percent": psutil.virtual_memory().percent,
+                "temperature_c": self._get_temp(),
+                "status": "healthy",
+                "timestamp": time.time(),
+            }
+            return data
+        except (RuntimeError, AttributeError) as e:
+            # Caught specific exceptions instead of broad Exception class
+            logger.error(f"Failed to collect system metrics: {e}")
+            return {"status": "error", "message": str(e)}
 
     def _get_temp(self):
-    """
-    Retrieves CPU temperature.
+        """
+        Retrieves CPU temperature safely.
 
-    Note: Temperature sensors might not be available on all platforms.
-    """
-    if self.mock_mode:
-        return 45.0
+        Note: Temperature sensors might not be available on all platforms.
+        """
+        if self.mock_mode:
+            return 45.0
 
-    try:
-        temps = psutil.sensors_temperatures()
-        for name in ["cpu_thermal", "coretemp", "soc_thermal"]:
-            if name in temps:
-                return temps[name][0].current
-        return None
-    except AttributeError:  # Specific to when sensors_temperatures() is unavailable
-        logger.warning("Temperature sensors not supported on this platform.")
-        return None
+        try:
+            temps = psutil.sensors_temperatures()
+            for name in ["cpu_thermal", "coretemp", "soc_thermal"]:
+                if name in temps:
+                    return temps[name][0].current
+            return None
+        except (AttributeError, KeyError, PermissionError):
+            # Caught specific errors to avoid broad exception clauses (Ruff BLE001)
+            logger.warning("Temperature sensors not supported or accessible.")
+            return None
