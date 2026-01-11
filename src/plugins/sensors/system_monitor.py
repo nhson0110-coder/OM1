@@ -23,7 +23,7 @@ class SystemMonitorPlugin(BasePlugin):
         # to decide if we should use mock data for temperature
         self.mock_mode = config.get("mock_mode", False) if config else False
 
-    def get_data(self) -> dict[str, float | str]:
+    def get_data(self) -> dict:
         """
         Collects current system metrics.
 
@@ -39,8 +39,12 @@ class SystemMonitorPlugin(BasePlugin):
                 "timestamp": time.time(),
             }
             return data
-        except psutil.Error as e:  # Only psutil-specific errors (e.g., AccessDenied, NoSuchProcess)
-            logger.error(f"Failed to collect system metrics: {e}")
+        except (
+            AttributeError,  # For unavailable sensors
+            psutil.Error,    # For psutil-specific issues like AccessDenied
+        ) as e:
+            # Catch specific expected exceptions to prevent masking bugs
+            logger.error("Failed to collect system metrics: %s", e)
             return {"status": "error", "message": str(e)}
 
     def _get_temp(self) -> float | None:
@@ -58,10 +62,10 @@ class SystemMonitorPlugin(BasePlugin):
                 if name in temps:
                     return temps[name][0].current
             return None
-        except (AttributeError, KeyError, psutil.AccessDenied) as e:
-            # Specific errors:
-            # - AttributeError: sensors_temperatures not on all platforms
-            # - KeyError: missing thermal zone names
-            # - AccessDenied: permissions issue
-            logger.warning(f"Temperature sensors not supported or accessible: {e}")
+        except (
+            AttributeError,  # sensors_temperatures not implemented
+            KeyError,        # Thermal name not found
+            psutil.Error,    # General psutil errors including AccessDenied
+        ):
+            logger.warning("Temperature sensors not supported or accessible.")
             return None
