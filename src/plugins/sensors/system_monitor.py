@@ -2,8 +2,7 @@ import logging
 import time
 
 import psutil
-
-from ...base import BasePlugin  # Relative import moves this to "Local" block
+from src.plugins.base import BasePlugin
 
 
 # Setup logger for the plugin
