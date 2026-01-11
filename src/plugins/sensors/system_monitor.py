@@ -2,6 +2,7 @@ import logging
 import time
 
 import psutil
+
 from src.plugins.base import BasePlugin
 
 
@@ -39,9 +40,9 @@ class SystemMonitorPlugin(BasePlugin):
                 "timestamp": time.time(),
             }
             return data
-        except (RuntimeError, AttributeError) as e:
-            # Caught specific exceptions instead of broad Exception class
-            logger.error(f"Failed to collect system metrics: {e}")
+        except (RuntimeError, AttributeError, psutil.Error) as e:
+            # Avoid broad Exception; catch specific errors (Ruff BLE001)
+            logger.error("Failed to collect system metrics: %s", e)
             return {"status": "error", "message": str(e)}
 
     def _get_temp(self):
@@ -59,7 +60,7 @@ class SystemMonitorPlugin(BasePlugin):
                 if name in temps:
                     return temps[name][0].current
             return None
-        except (AttributeError, KeyError, PermissionError):
-            # Caught specific errors to avoid broad exception clauses (Ruff BLE001)
+        except (AttributeError, KeyError, PermissionError, psutil.Error):
+            # Caught specific errors to ensure system stability
             logger.warning("Temperature sensors not supported or accessible.")
             return None
