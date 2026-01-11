@@ -2,8 +2,8 @@ import logging
 import time
 
 import psutil
-
 from src.plugins.base import BasePlugin
+
 
 # Setup logger for the plugin
 logger = logging.getLogger(__name__)
@@ -16,14 +16,14 @@ class SystemMonitorPlugin(BasePlugin):
     This allows the AI Agent to be aware of its physical constraints.
     """
 
-    def __init__(self, config: dict | None = None) -> None:
+    def __init__(self, config=None):
         super().__init__(config)
         self.name = "system_monitor"
         # Check if we are in a limited environment (e.g., Docker or MacOS)
         # to decide if we should use mock data for temperature
         self.mock_mode = config.get("mock_mode", False) if config else False
 
-    def get_data(self) -> dict:
+    def get_data(self):
         """
         Collects current system metrics.
 
@@ -39,15 +39,12 @@ class SystemMonitorPlugin(BasePlugin):
                 "timestamp": time.time(),
             }
             return data
-        except (
-            AttributeError,  # For unavailable sensors
-            psutil.Error,    # For psutil-specific issues like AccessDenied
-        ) as e:
-            # Catch specific expected exceptions to prevent masking bugs
+        except (RuntimeError, AttributeError, psutil.Error) as e:
+            # Avoid broad Exception; catch specific errors (Ruff BLE001)
             logger.error("Failed to collect system metrics: %s", e)
             return {"status": "error", "message": str(e)}
 
-    def _get_temp(self) -> float | None:
+    def _get_temp(self):
         """
         Retrieves CPU temperature safely.
 
@@ -62,10 +59,7 @@ class SystemMonitorPlugin(BasePlugin):
                 if name in temps:
                     return temps[name][0].current
             return None
-        except (
-            AttributeError,  # sensors_temperatures not implemented
-            KeyError,        # Thermal name not found
-            psutil.Error,    # General psutil errors including AccessDenied
-        ):
+        except (AttributeError, KeyError, PermissionError, psutil.Error):
+            # Caught specific errors to ensure system stability
             logger.warning("Temperature sensors not supported or accessible.")
             return None
