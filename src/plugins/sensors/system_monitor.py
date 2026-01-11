@@ -2,7 +2,8 @@ import logging
 import time
 
 import psutil
-from src.plugins.base import BasePlugin
+
+from ...base import BasePlugin
 
 
 # Setup logger for the plugin
