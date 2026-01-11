@@ -3,7 +3,7 @@ import time
 
 import psutil
 
-from src.plugins.base import BasePlugin
+from ...base import BasePlugin  # Relative import moves this to "Local" block
 
 
 # Setup logger for the plugin
