@@ -60,9 +60,6 @@ class SystemMonitorPlugin(BasePlugin):
                     return temps[name][0].current
             return None
         except (AttributeError, KeyError, psutil.AccessDenied):
-            # Caught specific errors:
-            # - AttributeError: sensors_temperatures not on all platforms
-            # - KeyError: missing thermal zone names
-            # - AccessDenied: permissions issue
+            # Caught specific errors to avoid broad exception clauses
             logger.warning("Temperature sensors not supported or accessible.")
             return None
