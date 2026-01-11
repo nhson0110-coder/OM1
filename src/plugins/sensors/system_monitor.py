@@ -39,13 +39,14 @@ class SystemMonitorPlugin(BasePlugin):
                 "timestamp": time.time(),
             }
             return data
-        except Exception as e:
+        except (psutil.Error, RuntimeError) as e:
+            # Narrowed exception to catch only psutil-related or runtime issues
             logger.error(f"Failed to collect system metrics: {e}")
             return {"status": "error", "message": str(e)}
 
     def _get_temp(self):
         """
-        Retrieves CPU temperature.
+        Retrieves CPU temperature safely.
 
         Note: Temperature sensors might not be available on all platforms.
         """
@@ -58,6 +59,10 @@ class SystemMonitorPlugin(BasePlugin):
                 if name in temps:
                     return temps[name][0].current
             return None
-        except (AttributeError, Exception):
-            logger.warning("Temperature sensors not supported on this platform.")
+        except (AttributeError, KeyError, psutil.AccessDenied):
+            # Caught specific errors:
+            # - AttributeError: sensors_temperatures not on all platforms
+            # - KeyError: missing thermal zone names
+            # - AccessDenied: permissions issue
+            logger.warning("Temperature sensors not supported or accessible.")
             return None
